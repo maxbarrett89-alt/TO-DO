@@ -1,5 +1,4 @@
 
-<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -72,6 +71,18 @@
   .next .label{font-size:calc(14px * var(--scale));margin-bottom:6px;color:var(--cyan);letter-spacing:1px}
   .next .task{font-size:calc(24px * var(--scale));line-height:1.25;color:var(--yellow)}
   .progress{font-size:calc(15px * var(--scale));margin:12px 0 6px;text-align:center;color:var(--green)}
+  .meter{
+    height:calc(26px * var(--scale));
+    border:4px solid var(--green);border-radius:8px;
+    background:#0d0020;overflow:hidden;margin:4px 0 10px;
+  }
+  .meter .fill{
+    height:100%;width:0%;
+    background:linear-gradient(90deg,var(--cyan),var(--magenta),var(--yellow));
+    box-shadow:0 0 14px rgba(255,47,208,.8);
+    transition:width .35s ease;
+  }
+  .meter.full .fill{background:var(--green);box-shadow:0 0 16px rgba(61,255,122,.9)}
 
   ul{list-style:none;margin:0;padding:0}
   li{border-bottom:3px solid rgba(0,240,255,.55);background:rgba(13,0,32,.55)}
@@ -171,6 +182,101 @@
     border-radius:6px;cursor:pointer;
   }
 
+  .water{
+    border:5px solid var(--cyan);border-radius:10px;padding:14px;margin:6px 0 14px;
+    background:linear-gradient(135deg,#0d0028,#1b0040);
+    box-shadow:0 0 14px rgba(0,240,255,.35);
+  }
+  .water .wtitle{
+    font-size:calc(16px * var(--scale));color:var(--cyan);letter-spacing:1px;margin-bottom:8px;
+  }
+  .bottles{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+  .bottle{
+    flex:1 1 auto;min-width:calc(46px * var(--scale));
+    font-size:calc(30px * var(--scale));line-height:1;
+    padding:8px 0;text-align:center;cursor:pointer;
+    background:#0d0020;border:3px solid var(--cyan);border-radius:8px;
+  }
+  .bottle.empty{opacity:.35;filter:grayscale(1)}
+  .bottle.full{border-color:var(--yellow);box-shadow:0 0 12px rgba(0,240,255,.8)}
+  .water .wcount{font-size:calc(15px * var(--scale));color:var(--green);text-align:center;margin:0}
+
+  .rowwrap{display:flex;align-items:center;gap:8px;padding-right:6px}
+  .rowwrap .row{flex:1}
+  .logsq{
+    flex:0 0 auto;
+    width:calc(52px * var(--scale));height:calc(52px * var(--scale));
+    border:4px solid var(--magenta);border-radius:8px;
+    background:#0d0020;color:var(--magenta);
+    font:inherit;font-size:calc(12px * var(--scale));line-height:1.1;
+    cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    box-shadow:0 0 10px rgba(255,47,208,.5);
+  }
+  .logsq .ic{font-size:calc(20px * var(--scale));line-height:1}
+
+  .bpcard .badge{
+    float:right;
+    width:calc(54px * var(--scale));height:calc(54px * var(--scale));
+    border:4px solid var(--cyan);border-radius:8px;background:#0d0020;color:var(--cyan);
+    display:flex;align-items:center;justify-content:center;
+    font-size:calc(24px * var(--scale));margin-left:10px;
+    box-shadow:0 0 10px rgba(0,240,255,.6);
+  }
+
+  .bpcard{
+    display:block;width:100%;text-align:left;cursor:pointer;
+    border:5px solid var(--magenta);border-radius:10px;padding:16px;margin:6px 0 14px;
+    background:linear-gradient(135deg,#2a0050,#3d0066);
+    box-shadow:0 0 16px rgba(255,47,208,.45);
+    font:inherit;color:var(--fg);
+  }
+  .bpcard .bptitle{
+    font-size:calc(18px * var(--scale));color:var(--yellow);letter-spacing:1px;
+    text-shadow:0 0 8px rgba(255,230,0,.8), 2px 2px 0 var(--magenta);
+  }
+  .bpcard .bplast{font-size:calc(15px * var(--scale));color:var(--cyan);margin-top:8px}
+
+  .modal{
+    position:fixed;inset:0;z-index:20;overflow-y:auto;
+    background:linear-gradient(180deg,#1d0040 0%,#12002b 60%,#23003f 100%);
+    padding:calc(env(safe-area-inset-top,0px) + 14px) 14px calc(env(safe-area-inset-bottom,0px) + 24px);
+  }
+  .modal-inner{max-width:900px;margin:0 auto}
+  .modal-head{
+    display:flex;align-items:center;gap:10px;justify-content:space-between;
+    border-bottom:5px solid var(--magenta);padding-bottom:10px;margin-bottom:14px;
+  }
+  .modal-head h2{margin:0;border:0;padding:0}
+  .closebtn{
+    font:inherit;font-size:calc(17px * var(--scale));padding:12px 16px;
+    border:4px solid var(--cyan);background:#0d0020;color:var(--cyan);
+    border-radius:8px;cursor:pointer;white-space:nowrap;
+  }
+
+  .readings-form{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px}
+  .field{flex:1;min-width:110px}
+  .field label{display:block;font-size:calc(13px * var(--scale));color:var(--cyan);margin-bottom:4px;letter-spacing:1px}
+  .chartbox{
+    border:4px solid var(--cyan);border-radius:10px;padding:10px;margin:0 0 14px;
+    background:#0d0020;
+  }
+  .chartbox .ctitle{font-size:calc(15px * var(--scale));color:var(--magenta);margin-bottom:6px;letter-spacing:1px}
+  .chartbox svg{width:100%;height:auto;display:block}
+  .legend{font-size:calc(13px * var(--scale));margin-top:6px}
+  .logline{
+    display:flex;gap:10px;align-items:center;flex-wrap:wrap;
+    padding:10px 8px;border-bottom:3px solid rgba(0,240,255,.45);
+    font-size:calc(15px * var(--scale));color:var(--yellow);
+  }
+  .logline .when{color:var(--cyan);min-width:9em}
+  .logline button{
+    font:inherit;font-size:calc(13px * var(--scale));padding:7px 10px;
+    border:3px solid var(--magenta);background:#0d0020;color:var(--magenta);
+    border-radius:6px;cursor:pointer;margin-left:auto;
+  }
+  #csvBox{width:100%;min-height:7em;font-size:calc(13px * var(--scale));
+    background:#0d0020;color:var(--green);border:3px solid var(--green);border-radius:6px;padding:8px}
+
   .bar{
     position:fixed;left:0;right:0;bottom:0;z-index:6;
     display:flex;gap:8px;justify-content:center;flex-wrap:wrap;
@@ -199,6 +305,7 @@
     </div>
     <h1 id="title">DAILY ROUTINE</h1>
     <p class="date" id="today"></p>
+    <p class="date" id="buildTag" style="margin-top:-6px;font-size:calc(12px * var(--scale));opacity:.8"></p>
     <div class="days" id="days"></div>
   </header>
 
@@ -213,6 +320,9 @@
       <button id="renameProfile" type="button">Rename to this</button>
       <button id="deleteProfile" type="button">Delete this profile</button>
     </div>
+    <div class="prow">
+      <button id="restoreBuiltin" type="button">Load latest Tanner schedule</button>
+    </div>
     <p id="msg" style="margin:6px 0 0;font-size:calc(15px * var(--scale))"></p>
   </div>
 
@@ -221,7 +331,16 @@
     <div class="task" id="nextTask">&mdash;</div>
   </div>
 
+  <h2>WATER</h2>
+  <div class="water">
+    <div class="wtitle" id="waterTitle">3 LITERS &mdash; 6 BOTTLES (16.9 oz each)</div>
+    <div class="bottles" id="bottles"></div>
+    <div class="meter" id="waterMeter"><div class="fill" id="waterMeterFill"></div></div>
+    <p class="wcount" id="waterCount"></p>
+  </div>
+
   <p class="progress" id="progress"></p>
+  <div class="meter" id="meter" aria-hidden="true"><div class="fill" id="meterFill"></div></div>
 
   <ul id="list"></ul>
 
@@ -237,11 +356,61 @@
   <h2 id="stepsHeading">STEP LIST</h2>
   <ul id="stepList"></ul>
   <p class="progress" id="stepProgress"></p>
+  <div class="meter" id="stepMeter" aria-hidden="true"><div class="fill" id="stepMeterFill"></div></div>
   <div class="panel hidden" id="addStepPanel">
     <h3>ADD A STEP</h3>
     <input type="text" id="newStepName" placeholder="Step">
     <div class="prow" style="margin-top:8px">
       <button id="addStepBtn" type="button">Add step</button>
+    </div>
+  </div>
+
+  <h2>BP &amp; BLOOD SUGAR</h2>
+  <button class="bpcard" id="openReadings" type="button">
+    <span class="badge" aria-hidden="true">&#128200;</span>
+    <div class="bptitle">TAP TO LOG &amp; SEE CHARTS</div>
+    <div class="bplast" id="lastReading">No readings yet</div>
+  </button>
+
+  <div class="modal hidden" id="readingModal">
+    <div class="modal-inner">
+      <div class="modal-head">
+        <h2>BP &amp; BLOOD SUGAR</h2>
+        <button class="closebtn" id="closeReadings" type="button">&#10005; CLOSE</button>
+      </div>
+  <div class="readings-form">
+    <div class="field">
+      <label for="sysInput">TOP (SYS)</label>
+      <input type="number" id="sysInput" inputmode="numeric" placeholder="120">
+    </div>
+    <div class="field">
+      <label for="diaInput">BOTTOM (DIA)</label>
+      <input type="number" id="diaInput" inputmode="numeric" placeholder="80">
+    </div>
+    <div class="field">
+      <label for="sugarInput">SUGAR</label>
+      <input type="number" id="sugarInput" inputmode="numeric" placeholder="110">
+    </div>
+  </div>
+  <div class="prow">
+    <button class="day" id="saveReading" type="button" style="min-width:auto">SAVE READING</button>
+    <button class="day" id="copyCsv" type="button" style="min-width:auto">Show log to copy</button>
+  </div>
+  <p id="readingMsg" style="color:var(--magenta);font-size:calc(15px * var(--scale));margin:6px 0"></p>
+
+  <div class="chartbox" id="bpChartBox">
+    <div class="ctitle">BLOOD PRESSURE</div>
+    <div id="bpChart"></div>
+    <div class="legend"><span style="color:var(--magenta)">&#9632; TOP</span>
+      &nbsp; <span style="color:var(--cyan)">&#9632; BOTTOM</span></div>
+  </div>
+  <div class="chartbox" id="sugarChartBox">
+    <div class="ctitle">BLOOD SUGAR</div>
+    <div id="sugarChart"></div>
+  </div>
+  <div id="readingLog"></div>
+  <textarea id="csvBox" class="hidden" readonly></textarea>
+
     </div>
   </div>
 
@@ -271,6 +440,7 @@
   var WEEK = ["MON","TUE","WED","THU","FRI","SAT","SUN"];
   var FULL = {SUN:"Sunday",MON:"Monday",TUE:"Tuesday",WED:"Wednesday",THU:"Thursday",FRI:"Friday",SAT:"Saturday"};
   var PROFILES_KEY = "routine:profiles";
+  var BUILTIN_VERSION = 4;   // bump when the built-in Tanner schedule changes
 
   var editMode = false, scale = 1;
   var store = null, marks = {}, timerState = {}, rang = {};
@@ -279,23 +449,24 @@
   function uid(){ return Math.random().toString(36).slice(2,9); }
 
   function tannerProfile(){
-    var ORDER = ["blood","dress","laundry","exercise","meds","trash","bigtrash","pool","dust","vacuum","bathroom","mealprep","water","evening"];
+    var ORDER = ["blood","dress","drink","laundry","exercise","meds","trash","bigtrash","pool","dust","vacuum","bathroom","mealprep","water","lunch","evening"];
     var L = {
-      blood:"Blood sugar / BP", dress:"Dress / coffee", laundry:"Start laundry",
-      exercise:"Exercise", meds:"Meds \u2014 med boxes", trash:"Trash \u2014 kitchen check",
+      blood:"Blood sugar / BP", dress:"Dress / coffee",
+      drink:"Drink water \u2014 3 liters today", laundry:"Start laundry",
+      exercise:"Exercise", meds:"Meds \u2014 med boxes", lunch:"Make lunch", trash:"Trash \u2014 kitchen check",
       bigtrash:"Big trash out", pool:"Pool", dust:"Dust bedroom", vacuum:"Vacuum",
       bathroom:"Bathroom", mealprep:"Meal prep", water:"Water plants",
       evening:"Evening check \u2014 trash in room"
     };
-    var EVERY = ["blood","dress","exercise","pool","evening"];
+    var EVERY = ["blood","dress","drink","exercise","pool","evening"];
     var EXTRA = {
-      MON:["laundry","meds","trash","dust","vacuum","bathroom","mealprep"],
-      TUE:["bigtrash","water"],
-      WED:["trash","vacuum"],
-      THU:["water"],
-      FRI:["laundry","meds","trash","vacuum"],
+      MON:["laundry","meds","trash","dust","vacuum","bathroom","mealprep","lunch"],
+      TUE:["bigtrash","water","lunch"],
+      WED:["trash","vacuum","lunch"],
+      THU:["water","lunch"],
+      FRI:["laundry","meds","trash","vacuum","lunch"],
       SAT:["water"],
-      SUN:["trash","vacuum"]
+      SUN:["trash","vacuum","lunch"]
     };
     var OV = { MON:{vacuum:"Vacuum bedroom"}, FRI:{laundry:"Start laundry \u2014 bedding (every other week)"} };
     var days = {};
@@ -304,11 +475,12 @@
       EVERY.concat(EXTRA[d] || []).forEach(function(k){ keys[k] = true; });
       var ov = OV[d] || {};
       days[d] = ORDER.filter(function(k){ return keys[k]; }).map(function(k){
-        return { id: uid(), name: ov[k] || L[k] };
+        return { id: d + ":" + k, name: ov[k] || L[k] };
       });
     });
     return {
-      id: uid(), name: "Tanner",
+      id: "builtin-tanner", name: "Tanner",
+      builtin: true, builtinVersion: BUILTIN_VERSION,
       work: { TUE:true, WED:true, THU:true },
       stepsTitle: "POOL \u2014 INCLUDES",
       days: days,
@@ -321,10 +493,10 @@
         "Start waterfall",
         "Take Louie out when he is done & clean him",
         "Shut off waterfall, then pump (set timer)"
-      ].map(function(s){ return { id: uid(), name: s }; }),
+      ].map(function(s, i){ return { id: "step" + i, name: s }; }),
       timers: [
-        { id: uid(), name:"LOUIE", minutes:120, doneText:"TAKE LOUIE OUT" },
-        { id: uid(), name:"POOL PUMP", minutes:120, doneText:"SHUT OFF PUMP" }
+        { id: "t-louie", name:"LOUIE", minutes:120, doneText:"TAKE LOUIE OUT" },
+        { id: "t-pump", name:"POOL PUMP", minutes:120, doneText:"SHUT OFF PUMP" }
       ]
     };
   }
@@ -332,7 +504,7 @@
   function blankProfile(name){
     var days = {};
     WEEK.forEach(function(d){ days[d] = []; });
-    return { id: uid(), name: name || "New profile", work: {}, stepsTitle: "STEP LIST", days: days, steps: [], timers: [] };
+    return { id: uid(), name: name || "New profile", builtin: false, work: {}, stepsTitle: "STEP LIST", days: days, steps: [], timers: [] };
   }
 
   function loadStore(){
@@ -345,7 +517,34 @@
       store = { profiles: [t], activeId: t.id };
       saveStore();
     }
+    // legacy profiles saved before the builtin flag existed
+    store.profiles.forEach(function(pr){
+      if (typeof pr.builtin === "undefined"){
+        pr.builtin = (pr.name === "Tanner");
+        pr.builtinVersion = 0;
+      }
+    });
+
+    // refresh any built-in profile the user hasn't customized
+    var changed = false;
+    store.profiles = store.profiles.map(function(pr){
+      if (pr.builtin && pr.builtinVersion !== BUILTIN_VERSION){
+        var fresh = tannerProfile();
+        fresh.id = pr.id;
+        fresh.name = pr.name || fresh.name;
+        changed = true;
+        return fresh;
+      }
+      return pr;
+    });
+    if (changed) saveStore();
     if (!activeProfile()) store.activeId = store.profiles[0].id;
+  }
+
+  // once the user edits a profile, stop auto-refreshing it
+  function markCustom(){
+    var pr = activeProfile();
+    if (pr && pr.builtin){ pr.builtin = false; }
   }
   function saveStore(){
     try { localStorage.setItem(PROFILES_KEY, JSON.stringify(store)); } catch(e){}
@@ -470,6 +669,183 @@
     return btn;
   }
 
+  /* ---------- readings ---------- */
+  var readings = [];
+
+  function readingsKey(){ return "routine:readings:" + store.activeId; }
+  function loadReadings(){
+    try {
+      var raw = localStorage.getItem(readingsKey());
+      readings = raw ? JSON.parse(raw) : [];
+    } catch(e){ readings = []; }
+    if (!Object.prototype.toString.call(readings).match(/Array/)) readings = [];
+  }
+  function saveReadings(){
+    try { localStorage.setItem(readingsKey(), JSON.stringify(readings)); } catch(e){}
+  }
+
+  function whenText(ms){
+    var d = new Date(ms);
+    return (d.getMonth()+1) + "/" + d.getDate() + " " +
+      d.toLocaleTimeString(undefined, { hour:"numeric", minute:"2-digit" });
+  }
+
+  function svgChart(series, unitLabel){
+    var pts = [];
+    series.forEach(function(sr){ sr.values.forEach(function(v){ if (v !== null) pts.push(v); }); });
+    if (!pts.length) return '<p style="color:var(--cyan);font-size:calc(14px * var(--scale))">No readings yet.</p>';
+
+    var W = 320, H = 150, padL = 38, padR = 8, padT = 10, padB = 22;
+    var min = Math.min.apply(null, pts), max = Math.max.apply(null, pts);
+    if (min === max){ min = min - 10; max = max + 10; }
+    var span = max - min;
+    min = Math.floor((min - span * 0.15) / 5) * 5;
+    max = Math.ceil((max + span * 0.15) / 5) * 5;
+
+    var n = 0;
+    series.forEach(function(sr){ n = Math.max(n, sr.values.length); });
+    function X(i){ return padL + (n <= 1 ? (W - padL - padR) / 2 : (i * (W - padL - padR) / (n - 1))); }
+    function Y(v){ return padT + (max - v) * (H - padT - padB) / (max - min); }
+
+    var out = '<svg viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg" role="img">';
+    [0, 0.5, 1].forEach(function(f){
+      var v = min + (max - min) * f;
+      var y = Y(v);
+      out += '<line x1="' + padL + '" y1="' + y + '" x2="' + (W - padR) + '" y2="' + y +
+             '" stroke="rgba(0,240,255,.35)" stroke-width="1"/>';
+      out += '<text x="4" y="' + (y + 4) + '" fill="#00f0ff" font-size="11" font-family="Verdana">' +
+             Math.round(v) + '</text>';
+    });
+
+    series.forEach(function(sr){
+      var d = "", started = false;
+      sr.values.forEach(function(v, i){
+        if (v === null || v === undefined) return;
+        d += (started ? " L" : "M") + X(i) + " " + Y(v);
+        started = true;
+      });
+      if (d) out += '<path d="' + d + '" fill="none" stroke="' + sr.color + '" stroke-width="3" stroke-linejoin="round"/>';
+      sr.values.forEach(function(v, i){
+        if (v === null || v === undefined) return;
+        out += '<circle cx="' + X(i) + '" cy="' + Y(v) + '" r="4" fill="' + sr.color + '"/>';
+      });
+    });
+
+    out += '</svg>';
+    return out;
+  }
+
+  function renderReadings(){
+    var recent = readings.slice(-14);
+
+    var lastEl = document.getElementById("lastReading");
+    if (lastEl){
+      if (!readings.length){
+        lastEl.textContent = "No readings yet";
+      } else {
+        var last = readings[readings.length - 1];
+        var bits = [];
+        if (last.sys && last.dia) bits.push("BP " + last.sys + "/" + last.dia);
+        if (last.sugar) bits.push("Sugar " + last.sugar);
+        lastEl.textContent = "Last: " + bits.join("   ") + "   (" + whenText(last.t) + ")";
+      }
+    }
+
+    document.getElementById("bpChart").innerHTML = svgChart([
+      { color:"#ff2fd0", values: recent.map(function(r){ return (r.sys === null || r.sys === undefined) ? null : r.sys; }) },
+      { color:"#00f0ff", values: recent.map(function(r){ return (r.dia === null || r.dia === undefined) ? null : r.dia; }) }
+    ]);
+
+    document.getElementById("sugarChart").innerHTML = svgChart([
+      { color:"#ffe600", values: recent.map(function(r){ return (r.sugar === null || r.sugar === undefined) ? null : r.sugar; }) }
+    ]);
+
+    var log = document.getElementById("readingLog");
+    log.innerHTML = "";
+    readings.slice(-8).reverse().forEach(function(r){
+      var idx = readings.indexOf(r);
+      var row = document.createElement("div");
+      row.className = "logline";
+
+      var when = document.createElement("span");
+      when.className = "when"; when.textContent = whenText(r.t);
+
+      var vals = document.createElement("span");
+      var bits = [];
+      if (r.sys && r.dia) bits.push("BP " + r.sys + "/" + r.dia);
+      if (r.sugar) bits.push("Sugar " + r.sugar);
+      vals.textContent = bits.join("   ");
+
+      row.appendChild(when); row.appendChild(vals);
+      row.appendChild(mkRemoveBtn(function(){
+        readings.splice(idx, 1); saveReadings(); renderReadings();
+      }));
+      log.appendChild(row);
+    });
+  }
+
+  var BOTTLE_GOAL = 6;
+
+  function waterCount(){
+    var w = marks.water;
+    return (w && typeof w[selected] === "number") ? w[selected] : 0;
+  }
+
+  function setWater(n){
+    if (!marks.water) marks.water = {};
+    marks.water[selected] = Math.max(0, Math.min(BOTTLE_GOAL, n));
+
+    // keep the "Drink water" task in step with the bottles
+    var prof = activeProfile();
+    var tasks = prof.days[selected] || [];
+    for (var i=0;i<tasks.length;i++){
+      if (tasks[i].id && String(tasks[i].id).indexOf(":drink") > -1){
+        if (!marks[selected]) marks[selected] = {};
+        if (marks.water[selected] >= BOTTLE_GOAL) marks[selected][tasks[i].id] = true;
+        else delete marks[selected][tasks[i].id];
+        break;
+      }
+    }
+    saveMarks(); render();
+  }
+
+  function renderWater(){
+    var count = waterCount();
+    var wrap = document.getElementById("bottles");
+    wrap.innerHTML = "";
+    for (var i=0;i<BOTTLE_GOAL;i++){
+      (function(i){
+        var b = document.createElement("button");
+        b.type = "button";
+        b.className = "bottle " + (i < count ? "full" : "empty");
+        b.textContent = "\uD83D\uDCA7";
+        b.setAttribute("aria-label", "Bottle " + (i+1));
+        b.addEventListener("click", function(){
+          setWater(count === i + 1 ? i : i + 1);
+        });
+        wrap.appendChild(b);
+      })(i);
+    }
+    document.getElementById("waterCount").textContent =
+      count + " of " + BOTTLE_GOAL + " bottles (16.9 oz) \u2014 " +
+      Math.round(count * 16.9) + " oz" + (count >= BOTTLE_GOAL ? " \u2014 done!" : "");
+    setMeter("waterMeter", "waterMeterFill", count, BOTTLE_GOAL);
+  }
+
+  function setMeter(meterId, fillId, done, total){
+    var meter = document.getElementById(meterId);
+    var fill = document.getElementById(fillId);
+    if (!meter || !fill) return;
+    if (!total){
+      meter.className = "meter hidden";
+      fill.style.width = "0%";
+      return;
+    }
+    var pct = Math.round((done / total) * 100);
+    meter.className = (done === total) ? "meter full" : "meter";
+    fill.style.width = pct + "%";
+  }
+
   function renderTasks(){
     var prof = activeProfile();
     if (!prof.days[selected]) prof.days[selected] = [];
@@ -487,20 +863,42 @@
       if (isDone) li.className = "done";
 
       if (editMode && renaming && renaming.kind === "task" && renaming.id === task.id){
-        li.appendChild(inlineEditor(task.name, function(v){ task.name = v; saveStore(); }));
+        li.appendChild(inlineEditor(task.name, function(v){ markCustom(); task.name = v; saveStore(); }));
       } else {
-        li.appendChild(makeRow(i, task.name, isDone, function(){
+        var rowBtn = makeRow(i, task.name, isDone, function(){
           if (!marks[selected]) marks[selected] = {};
           if (marks[selected][task.id]) delete marks[selected][task.id];
           else marks[selected][task.id] = true;
           saveMarks(); render();
-        }));
+        });
+
+        var isBP = (String(task.id).indexOf(":blood") > -1) ||
+                   /blood sugar|\bbp\b/i.test(task.name);
+
+        if (isBP && !editMode){
+          var wrap = document.createElement("div");
+          wrap.className = "rowwrap";
+          var logBtn = document.createElement("button");
+          logBtn.type = "button";
+          logBtn.className = "logsq";
+          logBtn.setAttribute("aria-label", "Open the BP and blood sugar log");
+          var ic = document.createElement("span");
+          ic.className = "ic"; ic.textContent = "\uD83D\uDCC8";
+          var lbl = document.createElement("span");
+          lbl.textContent = "LOG";
+          logBtn.appendChild(ic); logBtn.appendChild(lbl);
+          logBtn.addEventListener("click", function(e){ e.stopPropagation(); setModal(true); });
+          wrap.appendChild(rowBtn); wrap.appendChild(logBtn);
+          li.appendChild(wrap);
+        } else {
+          li.appendChild(rowBtn);
+        }
         if (editMode){
           li.appendChild(editTools(
-            function(){ move(tasks, i, -1); saveStore(); render(); },
-            function(){ move(tasks, i, 1); saveStore(); render(); },
+            function(){ markCustom(); move(tasks, i, -1); saveStore(); render(); },
+            function(){ markCustom(); move(tasks, i, 1); saveStore(); render(); },
             function(){ renaming = { kind:"task", id:task.id }; render(); },
-            function(){ tasks.splice(i,1); saveStore(); render(); }
+            function(){ markCustom(); tasks.splice(i,1); saveStore(); render(); }
           ));
         }
       }
@@ -508,6 +906,7 @@
     });
 
     document.getElementById("progress").textContent = done + " of " + tasks.length + " done";
+    setMeter("meter", "meterFill", done, tasks.length);
 
     var nextBox = document.getElementById("next");
     var nextEl = document.getElementById("nextTask");
@@ -540,7 +939,7 @@
       if (isDone) li.className = "done";
 
       if (editMode && renaming && renaming.kind === "step" && renaming.id === step.id){
-        li.appendChild(inlineEditor(step.name, function(v){ step.name = v; saveStore(); }));
+        li.appendChild(inlineEditor(step.name, function(v){ markCustom(); step.name = v; saveStore(); }));
       } else {
         li.appendChild(makeRow(i, step.name, isDone, function(){
           if (!marks.steps) marks.steps = {};
@@ -551,10 +950,10 @@
         }));
         if (editMode){
           li.appendChild(editTools(
-            function(){ move(steps, i, -1); saveStore(); render(); },
-            function(){ move(steps, i, 1); saveStore(); render(); },
+            function(){ markCustom(); move(steps, i, -1); saveStore(); render(); },
+            function(){ markCustom(); move(steps, i, 1); saveStore(); render(); },
             function(){ renaming = { kind:"step", id:step.id }; render(); },
-            function(){ steps.splice(i,1); saveStore(); render(); }
+            function(){ markCustom(); steps.splice(i,1); saveStore(); render(); }
           ));
         }
       }
@@ -563,6 +962,7 @@
 
     document.getElementById("stepProgress").textContent =
       steps.length ? (done + " of " + steps.length + " steps done") : "";
+    setMeter("stepMeter", "stepMeterFill", done, steps.length);
   }
 
   function fmt(ms){
@@ -625,7 +1025,7 @@
       if (editMode){
         btns.appendChild(mkBtn("Edit", function(){ editingTimer = tm.id; render(); }));
         btns.appendChild(mkRemoveBtn(function(){
-          prof.timers.splice(i,1); delete timerState[tm.id];
+          markCustom(); prof.timers.splice(i,1); delete timerState[tm.id];
           saveStore(); saveTimers(); render();
         }));
       }
@@ -646,7 +1046,7 @@
           var mv = parseInt(mi.value, 10);
           if (v) tm.name = v;
           if (mv > 0) tm.minutes = mv;
-          editingTimer = null; saveStore(); render();
+          markCustom(); editingTimer = null; saveStore(); render();
         }));
         ed.appendChild(mkBtn("Cancel", function(){ editingTimer = null; render(); }));
         card.appendChild(ed);
@@ -737,6 +1137,8 @@
 
   function render(){
     renderProfileSelect();
+    renderReadings();
+    renderWater();
     renderDays();
     renderTasks();
     renderSteps();
@@ -749,7 +1151,7 @@
 
   document.getElementById("profileSelect").addEventListener("change", function(e){
     store.activeId = e.target.value; saveStore();
-    loadMarks(); loadTimers(); render();
+    loadMarks(); loadTimers(); loadReadings(); render();
   });
 
   document.getElementById("profilesBtn").addEventListener("click", function(){
@@ -768,7 +1170,7 @@
     f.value = "";
     var pr = blankProfile(n);
     store.profiles.push(pr); store.activeId = pr.id; saveStore();
-    loadMarks(); loadTimers(); render();
+    loadMarks(); loadTimers(); loadReadings(); render();
   });
 
   document.getElementById("newCopy").addEventListener("click", function(){
@@ -778,7 +1180,7 @@
     if (!n){ showMsg("Type a name for the copy first."); return; }
     f.value = "";
     var copy = JSON.parse(JSON.stringify(src));
-    copy.id = uid(); copy.name = n;
+    copy.id = uid(); copy.name = n; copy.builtin = false;
     WEEK.forEach(function(d){
       copy.days[d] = (copy.days[d] || []).map(function(t){ return { id: uid(), name: t.name }; });
     });
@@ -787,7 +1189,7 @@
       return { id: uid(), name: t.name, minutes: t.minutes, doneText: t.doneText };
     });
     store.profiles.push(copy); store.activeId = copy.id; saveStore();
-    loadMarks(); loadTimers(); render();
+    loadMarks(); loadTimers(); loadReadings(); render();
   });
 
   document.getElementById("renameProfile").addEventListener("click", function(){
@@ -814,7 +1216,7 @@
       var pr = activeProfile();
       store.profiles = store.profiles.filter(function(x){ return x.id !== pr.id; });
       store.activeId = store.profiles[0].id;
-      saveStore(); loadMarks(); loadTimers(); render();
+      saveStore(); loadMarks(); loadTimers(); loadReadings(); render();
     });
   })();
 
@@ -835,6 +1237,7 @@
       prof.days[selected] = prof.days[selected] || [];
       prof.days[selected].push({ id: uid(), name: name });
     }
+    markCustom();
     input.value = "";
     newTaskDays = {}; renderDayPicker();
     saveStore(); render();
@@ -846,6 +1249,7 @@
     if (!name){ showMsg("Type a step first."); return; }
     var prof = activeProfile();
     prof.steps = prof.steps || [];
+    markCustom();
     prof.steps.push({ id: uid(), name: name });
     input.value = ""; saveStore(); render();
   });
@@ -859,10 +1263,82 @@
     if (!(mins > 0)){ showMsg("Enter the minutes."); return; }
     var prof = activeProfile();
     prof.timers = prof.timers || [];
+    markCustom();
     prof.timers.push({ id: uid(), name: name, minutes: mins, doneText: name.toUpperCase() + " \u2014 TIME'S UP" });
     nameEl.value = ""; minsEl.value = "120";
     saveStore(); render();
   });
+
+  function setModal(open){
+    var m = document.getElementById("readingModal");
+    m.className = open ? "modal" : "modal hidden";
+    if (open){ try { window.scrollTo(0,0); } catch(e){} }
+  }
+  document.getElementById("openReadings").addEventListener("click", function(){ setModal(true); });
+  document.getElementById("closeReadings").addEventListener("click", function(){ setModal(false); });
+  document.addEventListener("keydown", function(e){ if (e.key === "Escape") setModal(false); });
+
+  document.getElementById("saveReading").addEventListener("click", function(){
+    var sysEl = document.getElementById("sysInput");
+    var diaEl = document.getElementById("diaInput");
+    var sugEl = document.getElementById("sugarInput");
+    var sys = parseInt(sysEl.value, 10);
+    var dia = parseInt(diaEl.value, 10);
+    var sugar = parseInt(sugEl.value, 10);
+    var msg = document.getElementById("readingMsg");
+
+    if (!(sys > 0) && !(dia > 0) && !(sugar > 0)){
+      msg.textContent = "Type a number first.";
+      return;
+    }
+    readings.push({
+      t: Date.now(),
+      sys: sys > 0 ? sys : null,
+      dia: dia > 0 ? dia : null,
+      sugar: sugar > 0 ? sugar : null
+    });
+    saveReadings();
+    sysEl.value = ""; diaEl.value = ""; sugEl.value = "";
+    msg.textContent = "Saved!";
+    setTimeout(function(){ if (msg.textContent === "Saved!") msg.textContent = ""; }, 3000);
+    renderReadings();
+  });
+
+  document.getElementById("copyCsv").addEventListener("click", function(){
+    var box = document.getElementById("csvBox");
+    if (box.className.indexOf("hidden") < 0){ box.className = "hidden"; return; }
+    var lines = ["Date,Time,Top,Bottom,Sugar"];
+    readings.forEach(function(r){
+      var d = new Date(r.t);
+      lines.push(
+        (d.getMonth()+1) + "/" + d.getDate() + "/" + d.getFullYear() + "," +
+        d.toLocaleTimeString(undefined,{hour:"numeric",minute:"2-digit"}) + "," +
+        (r.sys || "") + "," + (r.dia || "") + "," + (r.sugar || "")
+      );
+    });
+    box.value = lines.join("\n");
+    box.className = "";
+    try { box.focus(); box.select(); } catch(e){}
+  });
+
+  (function(){
+    var btn = document.getElementById("restoreBuiltin");
+    var armed = false, t = null;
+    btn.addEventListener("click", function(){
+      if (!armed){
+        armed = true; btn.textContent = "Tap again \u2014 replaces this profile";
+        t = setTimeout(function(){ armed = false; btn.textContent = "Load latest Tanner schedule"; }, 4000);
+        return;
+      }
+      clearTimeout(t); armed = false; btn.textContent = "Load latest Tanner schedule";
+      var pr = activeProfile();
+      var fresh = tannerProfile();
+      fresh.id = pr.id; fresh.name = pr.name;
+      store.profiles = store.profiles.map(function(x){ return x.id === pr.id ? fresh : x; });
+      saveStore(); loadMarks(); loadTimers(); render();
+      showMsg("Schedule reloaded.");
+    });
+  })();
 
   document.getElementById("editBtn").addEventListener("click", function(){
     editMode = !editMode;
@@ -873,6 +1349,7 @@
   document.getElementById("reset").addEventListener("click", function(){
     if (marks[selected]) delete marks[selected];
     if (marks.steps && marks.steps[selected]) delete marks.steps[selected];
+    if (marks.water && marks.water[selected] !== undefined) delete marks.water[selected];
     saveMarks(); render();
   });
 
@@ -893,7 +1370,9 @@
   loadStore();
   loadMarks();
   loadTimers();
+  loadReadings();
   renderDayPicker();
+  document.getElementById("buildTag").textContent = "v" + BUILTIN_VERSION;
   document.getElementById("today").textContent =
     FULL[todayCode] + " \u2014 " + now.toLocaleDateString(undefined, { month:"long", day:"numeric" });
   render();
