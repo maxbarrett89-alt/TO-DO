@@ -396,6 +396,12 @@
     <button class="day" id="saveReading" type="button" style="min-width:auto">SAVE READING</button>
     <button class="day" id="copyCsv" type="button" style="min-width:auto">Show log to copy</button>
   </div>
+  <div class="prow">
+    <button class="day" id="savePdf" type="button" style="min-width:auto">&#128196; SAVE AS PDF</button>
+    <button class="day" id="saveBackup" type="button" style="min-width:auto">&#128190; SAVE BACKUP</button>
+    <button class="day" id="restoreBackup" type="button" style="min-width:auto">&#8593; RESTORE BACKUP</button>
+    <input type="file" id="restoreFile" accept=".json,application/json" class="hidden">
+  </div>
   <p id="readingMsg" style="color:var(--magenta);font-size:calc(15px * var(--scale));margin:6px 0"></p>
 
   <div class="chartbox" id="bpChartBox">
@@ -667,6 +673,155 @@
     btn.appendChild(num); btn.appendChild(name); btn.appendChild(box);
     btn.addEventListener("click", function(){ if (!editMode) onToggle(); });
     return btn;
+  }
+
+
+  /* ---------- file saving (PDF + backup) ---------- */
+  function asciiOnly(t){
+    return String(t)
+      .replace(/[\u2012-\u2015\u2212]/g, "-")
+      .replace(/[\u2018\u2019]/g, "'")
+      .replace(/[\u201C\u201D]/g, '"')
+      .replace(/\u2026/g, "...")
+      .replace(/[^\x20-\x7E]/g, "");
+  }
+  function pdfEscape(t){
+    return asciiOnly(t).replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
+  }
+
+  // lines: [{t:"text", size:11, bold:false, gap:0}]
+  function buildPdf(lines){
+    var PAGE_H = 792, TOP = 748, BOTTOM = 56, LEAD = 18, LEFT = 54;
+    var pages = [], cur = [], y = TOP;
+
+    lines.forEach(function(ln){
+      var lead = LEAD + (ln.gap || 0);
+      if (y - lead < BOTTOM){ pages.push(cur); cur = []; y = TOP; }
+      y -= lead;
+      cur.push({ t: ln.t, size: ln.size || 11, bold: !!ln.bold, y: y });
+    });
+    if (cur.length) pages.push(cur);
+    if (!pages.length) pages = [[{ t:"No readings yet.", size:12, bold:false, y:TOP }]];
+
+    var streams = pages.map(function(pg){
+      var out = "";
+      pg.forEach(function(l){
+        out += "BT /" + (l.bold ? "F2" : "F1") + " " + l.size + " Tf 1 0 0 1 " +
+               LEFT + " " + l.y + " Tm (" + pdfEscape(l.t) + ") Tj ET\n";
+      });
+      return out;
+    });
+
+    var objs = [];
+    var nPages = pages.length;
+    var firstPageObj = 5;
+    var firstStreamObj = firstPageObj + nPages;
+
+    var kids = [];
+    for (var i=0;i<nPages;i++) kids.push((firstPageObj + i) + " 0 R");
+
+    objs[1] = "<< /Type /Catalog /Pages 2 0 R >>";
+    objs[2] = "<< /Type /Pages /Kids [" + kids.join(" ") + "] /Count " + nPages +
+              " /MediaBox [0 0 612 " + PAGE_H + "]" +
+              " /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> >>";
+    objs[3] = "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>";
+    objs[4] = "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>";
+    for (var j=0;j<nPages;j++){
+      objs[firstPageObj + j] = "<< /Type /Page /Parent 2 0 R /Contents " + (firstStreamObj + j) + " 0 R >>";
+      objs[firstStreamObj + j] = "<< /Length " + streams[j].length + " >>\nstream\n" + streams[j] + "endstream";
+    }
+
+    var pdf = "%PDF-1.4\n";
+    var offsets = [];
+    for (var k=1;k<objs.length;k++){
+      offsets[k] = pdf.length;
+      pdf += k + " 0 obj\n" + objs[k] + "\nendobj\n";
+    }
+    var xrefAt = pdf.length;
+    pdf += "xref\n0 " + objs.length + "\n0000000000 65535 f \n";
+    for (var m=1;m<objs.length;m++){
+      var off = String(offsets[m]);
+      while (off.length < 10) off = "0" + off;
+      pdf += off + " 00000 n \n";
+    }
+    pdf += "trailer\n<< /Size " + objs.length + " /Root 1 0 R >>\nstartxref\n" + xrefAt + "\n%%EOF";
+    return new Blob([pdf], { type: "application/pdf" });
+  }
+
+  function saveFile(filename, blob){
+    if (window.claude && typeof window.claude.use === "function"){
+      window.claude.use("downloads").then(function(dl){
+        if (dl && dl.save){
+          dl.save({ filename: filename, data: blob }).then(function(){
+            showReadingMsg("Saved.");
+          }).catch(function(){ anchorSave(filename, blob); });
+        } else {
+          anchorSave(filename, blob);
+        }
+      }).catch(function(){ anchorSave(filename, blob); });
+    } else {
+      anchorSave(filename, blob);
+    }
+  }
+
+  function anchorSave(filename, blob){
+    try {
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement("a");
+      a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click();
+      setTimeout(function(){ document.body.removeChild(a); URL.revokeObjectURL(url); }, 1500);
+      showReadingMsg("Saved.");
+    } catch(e){ showReadingMsg("Could not save here."); }
+  }
+
+  function showReadingMsg(text){
+    var msg = document.getElementById("readingMsg");
+    if (!msg) return;
+    msg.textContent = text;
+    setTimeout(function(){ if (msg.textContent === text) msg.textContent = ""; }, 4000);
+  }
+
+  function readingsPdfLines(){
+    var prof = activeProfile();
+    var d = new Date();
+    var lines = [
+      { t: (prof.name || "Client") + " - BP & Blood Sugar Log", size: 17, bold: true },
+      { t: "Printed " + d.toLocaleDateString() + " " + d.toLocaleTimeString(undefined,{hour:"numeric",minute:"2-digit"}), size: 10 },
+      { t: "", size: 10 },
+      { t: "DATE          TIME        TOP    BOTTOM   SUGAR", size: 11, bold: true }
+    ];
+    function pad(v, n){
+      v = String(v == null ? "" : v);
+      while (v.length < n) v += " ";
+      return v;
+    }
+    if (!readings.length){
+      lines.push({ t: "No readings recorded yet.", size: 11 });
+      return lines;
+    }
+    readings.forEach(function(r){
+      var dt = new Date(r.t);
+      lines.push({ t:
+        pad((dt.getMonth()+1) + "/" + dt.getDate() + "/" + dt.getFullYear(), 14) +
+        pad(dt.toLocaleTimeString(undefined,{hour:"numeric",minute:"2-digit"}), 12) +
+        pad(r.sys || "-", 7) + pad(r.dia || "-", 9) + (r.sugar || "-"),
+        size: 11 });
+    });
+    lines.push({ t: "", size: 10 });
+    lines.push({ t: "Total readings: " + readings.length, size: 11, bold: true });
+    return lines;
+  }
+
+  function backupData(){
+    var out = {};
+    try {
+      for (var i=0;i<localStorage.length;i++){
+        var k = localStorage.key(i);
+        if (k && k.indexOf("routine:") === 0) out[k] = localStorage.getItem(k);
+      }
+    } catch(e){}
+    return out;
   }
 
   /* ---------- readings ---------- */
@@ -1302,6 +1457,45 @@
     msg.textContent = "Saved!";
     setTimeout(function(){ if (msg.textContent === "Saved!") msg.textContent = ""; }, 3000);
     renderReadings();
+  });
+
+  document.getElementById("savePdf").addEventListener("click", function(){
+    var prof = activeProfile();
+    var stamp = new Date();
+    var name = (prof.name || "client").toLowerCase().replace(/[^a-z0-9]+/g, "-") +
+      "-bp-log-" + stamp.getFullYear() + "-" + (stamp.getMonth()+1) + "-" + stamp.getDate() + ".pdf";
+    saveFile(name, buildPdf(readingsPdfLines()));
+  });
+
+  document.getElementById("saveBackup").addEventListener("click", function(){
+    var blob = new Blob([JSON.stringify(backupData(), null, 2)], { type: "application/json" });
+    var stamp = new Date();
+    saveFile("routine-backup-" + stamp.getFullYear() + "-" + (stamp.getMonth()+1) + "-" + stamp.getDate() + ".json", blob);
+  });
+
+  document.getElementById("restoreBackup").addEventListener("click", function(){
+    document.getElementById("restoreFile").click();
+  });
+
+  document.getElementById("restoreFile").addEventListener("change", function(e){
+    var file = e.target.files && e.target.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(){
+      try {
+        var data = JSON.parse(reader.result);
+        var n = 0;
+        Object.keys(data).forEach(function(k){
+          if (k.indexOf("routine:") === 0){ localStorage.setItem(k, data[k]); n++; }
+        });
+        showReadingMsg("Restored " + n + " items. Reloading...");
+        setTimeout(function(){ location.reload(); }, 1200);
+      } catch(err){
+        showReadingMsg("That file could not be read.");
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = "";
   });
 
   document.getElementById("copyCsv").addEventListener("click", function(){
