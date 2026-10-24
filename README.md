@@ -1,4 +1,4 @@
-
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -294,10 +294,53 @@
     background:var(--magenta);color:#12002b;border-color:var(--yellow);
     box-shadow:0 0 12px rgba(255,47,208,.9);
   }
+  .loginwrap{
+    position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(180deg,#12002b,#1d0040);padding:20px;
+  }
+  .loginbox{
+    width:100%;max-width:420px;border:5px solid var(--cyan);border-radius:12px;
+    background:#0d0020;box-shadow:0 0 24px rgba(0,240,255,.45);padding:20px;
+  }
+  .loginbox h1{
+    font-size:calc(26px * var(--scale));color:var(--yellow);text-align:center;margin:0 0 4px;
+    text-shadow:0 0 10px rgba(255,230,0,.8);
+  }
+  .loginbox p.sub{color:var(--cyan);text-align:center;font-size:calc(14px * var(--scale));margin:0 0 16px}
+  .loginbox label{display:block;color:var(--magenta);font-size:calc(15px * var(--scale));margin:12px 0 4px}
+  .loginbox input{
+    width:100%;font:inherit;font-size:calc(19px * var(--scale));padding:12px;
+    border:3px solid var(--cyan);border-radius:6px;background:#12002b;color:var(--fg);
+  }
+  .loginbox button{
+    width:100%;font:inherit;font-size:calc(20px * var(--scale));padding:14px;margin-top:18px;
+    border:4px solid var(--yellow);border-radius:8px;background:var(--magenta);color:#12002b;
+    cursor:pointer;box-shadow:0 0 14px rgba(255,47,208,.7);
+  }
+  .loginbox .err{color:var(--yellow);font-size:calc(15px * var(--scale));margin:12px 0 0;text-align:center}
+  .synctag{
+    text-align:center;font-size:calc(13px * var(--scale));margin:2px 0 6px;letter-spacing:.05em;
+  }
+  .synctag.ok{color:var(--green)}
+  .synctag.busy{color:var(--cyan)}
+  .synctag.off{color:var(--yellow)}
 </style>
 </head>
 <body>
-<div class="wrap">
+<div class="loginwrap" id="loginWrap">
+  <div class="loginbox">
+    <h1>DAILY ROUTINE</h1>
+    <p class="sub">Sign in to load the schedule</p>
+    <label for="loginEmail">Email</label>
+    <input id="loginEmail" type="email" autocomplete="username" autocapitalize="none" spellcheck="false">
+    <label for="loginPass">Password</label>
+    <input id="loginPass" type="password" autocomplete="current-password">
+    <button id="loginBtn" type="button">SIGN IN</button>
+    <p class="err" id="loginMsg"></p>
+  </div>
+</div>
+
+<div class="wrap hidden" id="appWrap">
   <header>
     <div class="toprow">
       <select id="profileSelect" aria-label="Profile"></select>
@@ -306,6 +349,7 @@
     <h1 id="title">DAILY ROUTINE</h1>
     <p class="date" id="today"></p>
     <p class="date" id="buildTag" style="margin-top:-6px;font-size:calc(12px * var(--scale));opacity:.8"></p>
+    <p class="synctag busy" id="syncTag">connecting&hellip;</p>
     <div class="days" id="days"></div>
   </header>
 
@@ -322,6 +366,9 @@
     </div>
     <div class="prow">
       <button id="restoreBuiltin" type="button">Load latest Tanner schedule</button>
+    </div>
+    <div class="prow">
+      <button id="signOutBtn" type="button">Sign out</button>
     </div>
     <p id="msg" style="margin:6px 0 0;font-size:calc(15px * var(--scale))"></p>
   </div>
@@ -554,6 +601,7 @@
   }
   function saveStore(){
     try { localStorage.setItem(PROFILES_KEY, JSON.stringify(store)); } catch(e){}
+    pushKey(PROFILES_KEY);
   }
   function activeProfile(){
     for (var i=0;i<store.profiles.length;i++){
@@ -577,6 +625,7 @@
   }
   function saveMarks(){
     try { localStorage.setItem(marksKey(), JSON.stringify(marks)); } catch(e){}
+    pushKey(marksKey());
   }
 
   function timersKey(){ return "routine:timers:" + store.activeId; }
@@ -590,6 +639,7 @@
   }
   function saveTimers(){
     try { localStorage.setItem(timersKey(), JSON.stringify(timerState)); } catch(e){}
+    pushKey(timersKey());
   }
 
   function move(arr, i, delta){
@@ -933,7 +983,9 @@
 
       row.appendChild(when); row.appendChild(vals);
       row.appendChild(mkRemoveBtn(function(){
+        var gone = readings[idx];
         readings.splice(idx, 1); saveReadings(); renderReadings();
+        deleteReading(gone);
       }));
       log.appendChild(row);
     });
@@ -1446,13 +1498,15 @@
       msg.textContent = "Type a number first.";
       return;
     }
-    readings.push({
+    var entry = {
       t: Date.now(),
       sys: sys > 0 ? sys : null,
       dia: dia > 0 ? dia : null,
       sugar: sugar > 0 ? sugar : null
-    });
+    };
+    readings.push(entry);
     saveReadings();
+    pushReading(entry);
     sysEl.value = ""; diaEl.value = ""; sugEl.value = "";
     msg.textContent = "Saved!";
     setTimeout(function(){ if (msg.textContent === "Saved!") msg.textContent = ""; }, 3000);
@@ -1547,6 +1601,278 @@
     saveMarks(); render();
   });
 
+
+  /* ================= Supabase sync ================= */
+  var SB_URL = "https://rcpijgfkuwkloyczhxgx.supabase.co";
+  var SB_KEY = "sb_publishable_MH3GzyUdV9o6yY_9LD9pxQ_mQ6GV5_l";
+  var SESSION_KEY = "routine:session";
+  var MIGRATED_KEY = "routine:pushed-local";
+
+  var session = null;
+  var online = false;
+  var touched = {};        // key -> ms when we last pushed it
+  var pending = {};        // key -> pushes currently in flight
+  var pendingReadings = 0;
+  var syncBusy = false;
+
+  function loadSession(){
+    try { session = JSON.parse(localStorage.getItem(SESSION_KEY) || "null"); }
+    catch(e){ session = null; }
+  }
+  function saveSession(j){
+    session = j ? {
+      access_token: j.access_token,
+      refresh_token: j.refresh_token,
+      email: (j.user && j.user.email) || (session && session.email) || ""
+    } : null;
+    try {
+      if (session) localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+      else localStorage.removeItem(SESSION_KEY);
+    } catch(e){}
+  }
+
+  function setSync(state, text){
+    var el = document.getElementById("syncTag");
+    if (!el) return;
+    el.className = "synctag " + state;
+    el.textContent = text;
+  }
+
+  function authPost(grant, body){
+    return fetch(SB_URL + "/auth/v1/token?grant_type=" + grant, {
+      method: "POST",
+      headers: { "apikey": SB_KEY, "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    }).then(function(r){
+      return r.json().then(function(j){ return { ok: r.ok, body: j }; });
+    });
+  }
+
+  function signIn(email, password){
+    return authPost("password", { email: email, password: password }).then(function(res){
+      if (!res.ok || !res.body.access_token){
+        var m = res.body && (res.body.error_description || res.body.msg || res.body.message);
+        throw new Error(m || "Could not sign in.");
+      }
+      saveSession(res.body);
+      return true;
+    });
+  }
+
+  function refreshSession(){
+    if (!session || !session.refresh_token) return Promise.resolve(false);
+    return authPost("refresh_token", { refresh_token: session.refresh_token }).then(function(res){
+      if (!res.ok || !res.body.access_token) return false;
+      saveSession(res.body);
+      return true;
+    }).catch(function(){ return false; });
+  }
+
+  function rest(path, opts, isRetry){
+    opts = opts || {};
+    var headers = {
+      "apikey": SB_KEY,
+      "Authorization": "Bearer " + (session ? session.access_token : ""),
+      "Content-Type": "application/json"
+    };
+    if (opts.prefer) headers["Prefer"] = opts.prefer;
+    return fetch(SB_URL + "/rest/v1/" + path, {
+      method: opts.method || "GET",
+      headers: headers,
+      body: opts.body
+    }).then(function(r){
+      if ((r.status === 401 || r.status === 403) && !isRetry){
+        return refreshSession().then(function(ok){
+          if (!ok) throw new Error("signed-out");
+          return rest(path, opts, true);
+        });
+      }
+      if (!r.ok) return r.text().then(function(t){ throw new Error(t || ("HTTP " + r.status)); });
+      if (r.status === 204) return null;
+      return r.text().then(function(t){ return t ? JSON.parse(t) : null; });
+    });
+  }
+
+  function syncable(k){
+    return k && k.indexOf("routine:") === 0 &&
+      k.indexOf("routine:readings:") !== 0 &&
+      k !== "routine:scale" && k !== SESSION_KEY && k !== MIGRATED_KEY;
+  }
+
+  function pushKey(k){
+    if (!session || !syncable(k)) return Promise.resolve();
+    var raw = localStorage.getItem(k);
+    if (raw === null) return Promise.resolve();
+    var parsed;
+    try { parsed = JSON.parse(raw); } catch(e){ return Promise.resolve(); }
+    // which profile is open is a per-device choice, so it is never shared
+    if (k === PROFILES_KEY && parsed) parsed = { profiles: parsed.profiles };
+    touched[k] = Date.now();
+    pending[k] = (pending[k] || 0) + 1;
+    return rest("routine_state?on_conflict=k", {
+      method: "POST",
+      prefer: "resolution=merge-duplicates,return=minimal",
+      body: JSON.stringify({ k: k, v: parsed, updated_at: new Date().toISOString() })
+    }).then(function(){
+      online = true;
+    }).catch(function(e){
+      if (String(e.message) === "signed-out") return showLogin("Please sign in again.");
+      online = false;
+      setSync("off", "offline \u2014 saved on this device");
+    }).then(function(){
+      pending[k] = Math.max(0, (pending[k] || 1) - 1);
+    });
+  }
+
+  function pullState(){
+    var started = Date.now();
+    return rest("routine_state?select=k,v").then(function(rows){
+      var changed = false;
+      (rows || []).forEach(function(row){
+        if (!syncable(row.k)) return;
+        // a write of ours is in flight, or landed after this read began:
+        // the row we just read is older than what is on this device
+        if (pending[row.k]) return;
+        if (touched[row.k] && touched[row.k] > started) return;
+        var value = row.v;
+        if (row.k === PROFILES_KEY && value && value.profiles){
+          var keepId = store ? store.activeId : null;
+          var stillThere = keepId && value.profiles.some(function(pr){ return pr.id === keepId; });
+          value = { profiles: value.profiles, activeId: stillThere ? keepId : value.profiles[0].id };
+        }
+        var remote = JSON.stringify(value);
+        if (remote === localStorage.getItem(row.k)) return;
+        try { localStorage.setItem(row.k, remote); changed = true; } catch(e){}
+      });
+      return changed;
+    });
+  }
+
+  function pullReadings(){
+    if (!store || pendingReadings) return Promise.resolve(false);
+    return rest("readings?select=id,taken_at,sys,dia,sugar&profile=eq." +
+                encodeURIComponent(store.activeId) + "&order=taken_at.asc")
+      .then(function(rows){
+        var fresh = (rows || []).map(function(r){
+          return {
+            rid: r.id,
+            t: new Date(r.taken_at).getTime(),
+            sys: r.sys, dia: r.dia, sugar: r.sugar
+          };
+        });
+        if (JSON.stringify(fresh) === JSON.stringify(readings)) return false;
+        readings = fresh;
+        saveReadings();
+        return true;
+      });
+  }
+
+  function pushReading(entry){
+    if (!session) return Promise.resolve();
+    pendingReadings++;
+    return rest("readings", {
+      method: "POST",
+      prefer: "return=representation",
+      body: JSON.stringify({
+        profile: store.activeId,
+        taken_at: new Date(entry.t).toISOString(),
+        sys: entry.sys, dia: entry.dia, sugar: entry.sugar
+      })
+    }).then(function(rows){
+      if (rows && rows[0]) { entry.rid = rows[0].id; saveReadings(); }
+      online = true;
+    }).catch(function(){
+      online = false;
+      setSync("off", "offline \u2014 saved on this device");
+    }).then(function(){
+      pendingReadings = Math.max(0, pendingReadings - 1);
+    });
+  }
+
+  function deleteReading(entry){
+    if (!session || !entry || !entry.rid) return Promise.resolve();
+    pendingReadings++;
+    return rest("readings?id=eq." + encodeURIComponent(entry.rid), { method: "DELETE" })
+      .catch(function(){})
+      .then(function(){ pendingReadings = Math.max(0, pendingReadings - 1); });
+  }
+
+  // first run on a fresh database: send what is already on this device
+  function pushLocalOnce(){
+    if (localStorage.getItem(MIGRATED_KEY)) return Promise.resolve();
+    return rest("routine_state?select=k&limit=1").then(function(rows){
+      var jobs = [];
+      if (!rows || !rows.length){
+        var keys = [];
+        for (var i=0;i<localStorage.length;i++){
+          var k = localStorage.key(i);
+          if (syncable(k)) keys.push(k);
+        }
+        keys.forEach(function(k){ jobs.push(pushKey(k)); });
+      }
+      return Promise.all(jobs);
+    }).then(function(){
+      return rest("readings?select=id&profile=eq." + encodeURIComponent(store.activeId) + "&limit=1");
+    }).then(function(rows){
+      if (rows && rows.length) return null;
+      return Promise.all(readings.map(function(r){ return pushReading(r); }));
+    }).then(function(){
+      try { localStorage.setItem(MIGRATED_KEY, "1"); } catch(e){}
+    }).catch(function(){});
+  }
+
+  function syncNow(){
+    if (!session || syncBusy) return Promise.resolve();
+    syncBusy = true;
+    setSync("busy", "syncing\u2026");
+    return Promise.all([pullState(), pullReadings()]).then(function(res){
+      online = true;
+      if (res[0]){
+        var openId = store.activeId;
+        loadStore();
+        if (openId !== store.activeId) { /* remote switched profile */ }
+        loadMarks(); loadTimers();
+      }
+      if (res[0] || res[1]) render();
+      setSync("ok", "synced \u2713  " + (session.email ? session.email.split("@")[0] : ""));
+    }).catch(function(e){
+      if (String(e.message) === "signed-out") { showLogin("Please sign in again."); }
+      else { online = false; setSync("off", "offline \u2014 saved on this device"); }
+    }).then(function(){
+      syncBusy = false;
+    });
+  }
+
+  function showLogin(message){
+    saveSession(null);
+    document.getElementById("appWrap").className = "wrap hidden";
+    document.getElementById("loginWrap").className = "loginwrap";
+    document.getElementById("loginMsg").textContent = message || "";
+  }
+
+  document.getElementById("loginBtn").addEventListener("click", function(){
+    var email = document.getElementById("loginEmail").value.trim();
+    var pass = document.getElementById("loginPass").value;
+    var msg = document.getElementById("loginMsg");
+    if (!email || !pass){ msg.textContent = "Type your email and password."; return; }
+    msg.textContent = "Signing in\u2026";
+    signIn(email, pass).then(function(){
+      document.getElementById("loginPass").value = "";
+      msg.textContent = "";
+      startApp();
+    }).catch(function(e){
+      msg.textContent = String(e.message || e);
+    });
+  });
+
+  document.getElementById("loginPass").addEventListener("keydown", function(e){
+    if (e.key === "Enter") document.getElementById("loginBtn").click();
+  });
+
+  document.getElementById("signOutBtn").addEventListener("click", function(){
+    showLogin("Signed out.");
+  });
+
   function setScale(v){
     scale = Math.min(2, Math.max(0.8, Math.round(v*10)/10));
     document.documentElement.style.setProperty("--scale", scale);
@@ -1561,16 +1887,41 @@
   } catch(e){}
   document.documentElement.style.setProperty("--scale", scale);
 
-  loadStore();
-  loadMarks();
-  loadTimers();
-  loadReadings();
-  renderDayPicker();
-  document.getElementById("buildTag").textContent = "v" + BUILTIN_VERSION;
-  document.getElementById("today").textContent =
-    FULL[todayCode] + " \u2014 " + now.toLocaleDateString(undefined, { month:"long", day:"numeric" });
-  render();
-  setInterval(tick, 1000);
+  var booted = false;
+
+  function startApp(){
+    document.getElementById("loginWrap").className = "loginwrap hidden";
+    document.getElementById("appWrap").className = "wrap";
+
+    loadStore();
+    loadMarks();
+    loadTimers();
+    loadReadings();
+    renderDayPicker();
+    document.getElementById("buildTag").textContent = "v" + BUILTIN_VERSION;
+    document.getElementById("today").textContent =
+      FULL[todayCode] + " \u2014 " + now.toLocaleDateString(undefined, { month:"long", day:"numeric" });
+    render();
+
+    if (!booted){
+      booted = true;
+      setInterval(tick, 1000);
+      setInterval(function(){ if (!document.hidden) syncNow(); }, 6000);
+      document.addEventListener("visibilitychange", function(){
+        if (!document.hidden) syncNow();
+      });
+    }
+
+    setSync("busy", "syncing\u2026");
+    pushLocalOnce().then(syncNow);
+  }
+
+  loadSession();
+  if (session && session.access_token){
+    startApp();
+  } else {
+    document.getElementById("loginWrap").className = "loginwrap";
+  }
 })();
 </script>
 </body>
